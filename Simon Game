@@ -1,0 +1,237 @@
+from tkinter import *
+import random
+import threading
+import time
+from tkinter import messagebox
+
+# Create a new Tkinter window
+win = Tk()
+
+# Set the window title
+win.title("Simon Game")
+
+# Set the window dimensions
+win_width = 500
+win_height = 500
+
+# Get the screen dimensions
+screen_width = win.winfo_screenwidth()
+screen_height = win.winfo_screenheight()
+
+# Calculate the x and y coordinates for the window to appear at the center
+x = (screen_width // 2) - (win_width // 2)
+y = (screen_height // 2) - (win_height // 2)
+
+# Position the window at the center of the screen
+win.geometry(f'{win_width}x{win_height}+{x}+{y}')
+
+# Disable window resizing
+win.resizable(width=1200, height=1200)
+
+# Define global variables
+global Green
+global Red
+global Yellow
+global Blue
+global watch
+global count
+global tmp
+global gameover
+global timer_count
+global score
+
+# Initialize variables
+score = 0
+timer_count = 0
+watch = True
+gameover = False
+stt = []
+tmp = len(stt)
+tmp_stt = []
+
+# Function to change the color of buttons
+def ChangeColor(i=1):
+    global stt
+    global watch
+    global count
+    global timer_count
+    count = len(stt)
+
+    # Iterate over the elements in the sequence
+    for i in stt:
+        time.sleep(0.2)
+
+        # Change the color of the button based on the current element
+        if i == 1:
+            win.after((timer_count+300), lambda: Green.config(bg='green'))
+            win.after((timer_count+500), lambda: Green.config(bg='#003300'))
+
+        elif i == 2:
+            win.after((timer_count+300), lambda: Red.config(bg='red'))
+            win.after((timer_count+500), lambda: Red.config(bg='#550000'))
+
+        elif i == 3:
+            win.after((timer_count+300), lambda: Yellow.config(bg='yellow'))
+            win.after((timer_count+500), lambda: Yellow.config(bg='#555500'))
+
+        elif i == 4:
+            win.after((timer_count+300), lambda: Blue.config(bg='blue'))
+            win.after((timer_count+500), lambda: Blue.config(bg='#000055'))
+
+        timer_count += 220
+
+# Function to handle button presses
+def press(num=1):
+    global watch
+    global gameover
+    global count
+    global score
+
+    # Check if there are remaining elements in the sequence and it is the player's turn
+    if count > 0 and watch == False:
+        if watch == False:
+            if num == 1:
+                tmp_stt.append(1)
+                check(count, (len(tmp_stt)-1), num)
+                count -= 1
+
+            elif num == 2:
+                tmp_stt.append(2)
+                check(count, (len(tmp_stt)-1), num)
+                count -= 1
+
+            elif num == 3:
+                tmp_stt.append(3)
+                check(count, (len(tmp_stt)-1), num)
+                count -= 1
+
+            elif num == 4:
+                tmp_stt.append(4)
+                check(count, (len(tmp_stt)-1), num)
+                count -= 1
+
+    # Check if the player has completed the sequence
+    if count <= 0 and gameover == False:
+        score += 1
+        l0.config(text=score)
+        watch = True
+        tmp_stt.clear()
+        if score < 3:
+            start()
+        else:
+            messagebox.showinfo("Game Over", "Congratulations! You won!")
+
+# Check if the input matches the element in the sequence
+def check(count=100, x=0, num=1):
+    global stt
+    global gameover
+    global score
+
+    # Check if the input matches the element in the sequence
+    if stt[x] != num:
+        gameover = True
+        messagebox.showinfo("Game Over", "You made a mistake!")
+        score = 0
+        l0.config(text="0")
+        start_game()
+    elif x == count - 1:
+        score += 1
+        l0.config(text=str(score))
+        tmp = len(stt)
+        tmp_stt.clear()
+        threading.Thread(target=continue_game).start()
+
+def continue_game():
+    global gameover
+    if score <3:  # Check if the score has reached 3
+        gameover = False
+        start()
+    else:
+        messagebox.showinfo("Game Over", "Congratulations! You won!")
+
+# Function to start a new game
+def start_game():
+    global score
+    global gameover
+    score = 0
+    l0.config(text="0")
+    stt.clear()
+    gameover = False
+    start()
+
+# Function to quit the game
+def quit_game():
+    win.destroy()
+
+
+# Function to start the game
+def start():
+    global stt
+    global tmp
+    global watch
+
+    # Generate a random number between 1 and 4
+    num = random.randint(1, 4)
+
+    # Add the number to the sequence
+    stt.append(num)
+
+    # Call the ChangeColor function to display the sequence
+    ChangeColor()
+
+    # Update the watch flag to allow player input
+    watch = False
+
+    # Check if the score has reached 5
+    if score == 3:
+        continue_game()
+
+# Create the buttons
+Green = Button(win, bg="#00FF00", activebackground="#00FF00", command=lambda: press(1))
+Red = Button(win, bg="#FF0000", activebackground="#FF0000", command=lambda: press(2))
+Yellow = Button(win, bg="#FFFF00", activebackground="#FFFF00", command=lambda: press(3))
+Blue = Button(win, bg="#0000FF", activebackground="#0000FF", command=lambda: press(4))
+
+# Position the buttons relatively in the center
+Green.place(relx=0.5, rely=0.3, anchor='center', height=56, width=50)
+Red.place(relx=0.5, rely=0.4, anchor='center', height=56, width=50)
+Yellow.place(relx=0.5, rely=0.5, anchor='center', height=56, width=50)
+Blue.place(relx=0.5, rely=0.6, anchor='center', height=56, width=50)
+
+
+# Create the label for the score
+l0 = Label(win, text="0", font=("Arial", 24))
+l0.place(relx=0.5, rely=0.7, anchor='center', height=56, width=50)
+
+# Create the restart button
+start_btn = Button(win, text="Start", command=start_game)
+start_btn.place(relx=0.3, rely=0.85, anchor='center', height=56, width=50)
+
+# Create the quit button
+quit_btn = Button(win, text="Quit", command=quit_game)
+quit_btn.place(relx=0.7, rely=0.85, anchor='center', height=56, width=50)
+
+# Start the game
+start()
+
+# Run the Tkinter event loop
+win.mainloop()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
